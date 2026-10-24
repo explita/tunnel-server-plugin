@@ -1,0 +1,62 @@
+generator client {
+    provider = "prisma-client"
+    output   = "../src/generated/prisma"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+// Developer Account (identified by verified email)
+model Developer {
+    id        String   @id @default(nanoid(10))
+    email     String   @unique
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+    tokens    Token[]
+
+    @@index([email])
+    @@map("developers")
+}
+
+// Multi-device developer tokens
+model Token {
+    id          String    @id @default(nanoid(10))
+    developerId String    @map("developer_id")
+    token       String    @unique
+    createdAt   DateTime  @default(now()) @map("created_at")
+    lastUsedAt  DateTime? @map("last_used_at")
+    revokedAt   DateTime? @map("revoked_at")
+
+    developer Developer @relation(fields: [developerId], references: [id], onDelete: Cascade)
+
+    @@index([token])
+    @@index([developerId])
+    @@map("tokens")
+}
+
+// Anonymous daily usage aggregates (Zero-Logging compliant)
+model DailyMetric {
+    id               String   @id @default(nanoid(10))
+    date             String   @unique
+    tunnelsOpened    Int      @default(0) @map("tunnels_opened")
+    requestsRouted   BigInt   @default(0) @map("requests_routed")
+    bytesTransferred BigInt   @default(0) @map("bytes_transferred")
+    activeDevelopers Int      @default(0) @map("active_developers")
+    createdAt        DateTime @default(now()) @map("created_at")
+    updatedAt        DateTime @updatedAt @map("updated_at")
+
+    @@index([date])
+    @@map("daily_metrics")
+}
+
+// Global lifetime totals
+model SystemMetric {
+    id            String   @id @default(nanoid(10))
+    totalTunnels  BigInt   @default(0) @map("total_tunnels")
+    totalRequests BigInt   @default(0) @map("total_requests")
+    totalBytes    BigInt   @default(0) @map("total_bytes")
+    updatedAt     DateTime @updatedAt @map("updated_at")
+
+    @@map("system_metrics")
+}

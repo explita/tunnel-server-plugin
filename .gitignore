@@ -1,0 +1,8 @@
+node_modules
+dist
+generated
+.env
+env.ts
+env.d.ts
+*.log
+*.tgz
